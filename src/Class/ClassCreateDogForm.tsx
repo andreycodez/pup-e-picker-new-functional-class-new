@@ -2,6 +2,7 @@ import { Component, FormEvent } from "react";
 import { dogPictures } from "../dog-pictures";
 import { TNewDogData, TNewDogObject } from "../types.ts";
 import { INITIAL_DOG_FORM_STATE } from "../constants.ts";
+import toast from "react-hot-toast";
 
 type TClassCreateDogFormProps = {
   addDog: (dogData: TNewDogData) => Promise<void>;
@@ -29,6 +30,7 @@ export class ClassCreateDogForm extends Component<
     this.setState({ isFormDisabled: true });
     this.props.addDog(this.state).then(() => {
       this.setState(INITIAL_DOG_FORM_STATE);
+      toast.success("The dog was created!");
     });
   };
 

@@ -2,6 +2,7 @@ import { dogPictures } from "../dog-pictures";
 import { INITIAL_REQUIRED_DOG_DATA } from "../constants.ts";
 import { TNewDogObject } from "../types.ts";
 import { ChangeEvent, useState } from "react";
+import toast from "react-hot-toast";
 
 // use this as your default selected image
 type CreateDogFormProps = {
@@ -36,6 +37,7 @@ export const FunctionalCreateDogForm = ({
         addSingleDog(dogData).then(() => {
           setDogData(INITIAL_REQUIRED_DOG_DATA);
           setIsFormDisabled(false);
+          toast.success("The dog was created!");
         });
       }}
     >
