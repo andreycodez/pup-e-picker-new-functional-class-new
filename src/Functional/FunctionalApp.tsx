@@ -2,20 +2,18 @@ import { FunctionalCreateDogForm } from "./FunctionalCreateDogForm";
 import { FunctionalDogs } from "./FunctionalDogs";
 import { FunctionalSection } from "./FunctionalSection";
 import { useEffect, useState } from "react";
-import { TCurrentViewType, TDog, TNewDogObject } from "../types.ts";
+import { TCurrentViewType, TDog } from "../types.ts";
 import { Requests } from "../api.tsx";
-import { getDogsListNumbers } from "../utils.ts";
 
 export function FunctionalApp() {
   const [allDogs, setAllDogs] = useState<TDog[] | null>(null);
   const [currentView, setCurrentView] = useState<TCurrentViewType>("all");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const favDogs = allDogs?.filter((dog: TDog) => dog.isFavorite);
-  const notFavDogs = allDogs?.filter((dog: TDog) => !dog.isFavorite);
-  const dogsList = {
-    all: allDogs,
-    favorited: favDogs,
-    notFavorited: notFavDogs,
+  const dogCounters = {
+    all: allDogs?.length || 0,
+    favorited: allDogs?.filter((dog: TDog) => dog.isFavorite).length || 0,
+    notFavorited: allDogs?.filter((dog: TDog) => !dog.isFavorite).length || 0,
   };
 
   const fetchDogs = () => {
@@ -23,7 +21,8 @@ export function FunctionalApp() {
       .then(setAllDogs)
       .catch((err) => {
         console.log(err);
-      });
+      })
+      .finally(() => setIsLoading(false));
   };
 
   useEffect(() => {
@@ -36,7 +35,7 @@ export function FunctionalApp() {
     setCurrentView(newViewValue);
   };
 
-  const addDog = async (dogData: TNewDogObject) => {
+  const addDog = async (dogData: Omit<TDog, "id">) => {
     return Requests.postDog(dogData).then(fetchDogs);
   };
 
@@ -55,19 +54,26 @@ export function FunctionalApp() {
       </header>
       <FunctionalSection
         viewToShow={currentView}
-        elementsNumber={getDogsListNumbers(dogsList)}
+        dogCounters={{ ...dogCounters, "create-dog": null }}
         setCurrentView={updateView}
       >
         <>
           {currentView !== "create-dog" && (
             <FunctionalDogs
-              dogsList={dogsList[currentView]}
-              deleteAction={deleteDog}
+              currentView={currentView}
+              allDogs={allDogs}
+              deleteDogAction={deleteDog}
               updateDogAction={updateFavoriteDog}
+              isLoading={isLoading}
+              setIsLoading={setIsLoading}
             />
           )}
           {currentView === "create-dog" && (
-            <FunctionalCreateDogForm addSingleDog={addDog} />
+            <FunctionalCreateDogForm
+              addSingleDog={addDog}
+              isLoading={isLoading}
+              setIsLoading={setIsLoading}
+            />
           )}
         </>
       </FunctionalSection>

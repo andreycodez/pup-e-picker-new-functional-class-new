@@ -1,6 +1,6 @@
-import { TNewDogObject, TPartialDogData } from './types.ts';
+import { TDog } from "./types.ts";
 
-export const baseUrl = 'http://localhost:3000/dogs/';
+export const baseUrl = "http://localhost:3000/dogs/";
 
 const getAllDogs = () => {
   return fetch(baseUrl)
@@ -11,11 +11,11 @@ const getAllDogs = () => {
     });
 };
 
-const postDog = (data: TNewDogObject) => {
+const postDog = (data: Omit<TDog, "id">) => {
   return fetch(baseUrl, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
   })
@@ -27,7 +27,7 @@ const postDog = (data: TNewDogObject) => {
 
 const deleteDog = (id: number) => {
   return fetch(`${baseUrl}/${id}`, {
-    method: 'DELETE',
+    method: "DELETE",
   })
     .then((res) => res.json())
     .catch((err) => {
@@ -35,18 +35,18 @@ const deleteDog = (id: number) => {
     });
 };
 
-const updateDog = (id: number, data: TPartialDogData) => {
+const updateDog = (id: number, data: Partial<TDog>) => {
   return fetch(`${baseUrl}${id}`, {
-    method: 'PATCH',
+    method: "PATCH",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
   })
     .then((res) => res.json())
     .catch((err) => {
       throw new Error(
-        `Could not update the dog with id: ${id}. Reason: ${err}`
+        `Could not update the dog with id: ${id}. Reason: ${err}`,
       );
     });
 };
@@ -62,6 +62,6 @@ export const Requests = {
   updateDog,
   // Just a dummy function for use in the playground
   dummyFunction: () => {
-    console.log('dummy stuff');
+    console.log("dummy stuff");
   },
 };

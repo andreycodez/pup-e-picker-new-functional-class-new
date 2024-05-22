@@ -1,24 +1,23 @@
 // you can use `ReactNode` to add a type to the children prop
 import { Component, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { TClassAppStateObject } from "./ClassApp.tsx";
-import { TCurrentViewType, TDogListNumbers } from "../types.ts";
+import { TCurrentViewType, TDog } from "../types.ts";
 
 type TClassSectionProps = {
+  dogCounters: Record<TCurrentViewType, number | null> | null;
   viewToShow: TCurrentViewType;
-  elementsNumber: TDogListNumbers | null;
-  setCurrentView: (
-    stateProp: keyof TClassAppStateObject,
-    statePropValue: TClassAppStateObject[keyof TClassAppStateObject],
+  updateAppState: (
+    prop: "allDogs" | "currentView" | "isLoading",
+    value: TDog[] | TCurrentViewType | boolean | null,
   ) => void;
   children: ReactNode;
 };
 
 export class ClassSection extends Component<TClassSectionProps> {
   render() {
-    const { viewToShow, elementsNumber, setCurrentView } = this.props;
-
-    const sections = Object.keys({ ...elementsNumber, "create-dog": null });
+    const { viewToShow, dogCounters, updateAppState } = this.props;
+    const favDogCounter = dogCounters?.favorited;
+    const notFavDogCounter = dogCounters?.notFavorited;
 
     return (
       <section id="main-section">
@@ -30,30 +29,32 @@ export class ClassSection extends Component<TClassSectionProps> {
           </Link>
 
           <div className="selectors">
-            {sections.map((sectionItem) => {
-              if (sectionItem !== "all") {
-                return (
-                  <div
-                    key={sectionItem}
-                    className={`selector ${
-                      viewToShow === sectionItem && "active"
-                    }`}
-                    onClick={() => {
-                      setCurrentView(
-                        "currentView",
-                        sectionItem as TCurrentViewType,
-                      );
-                    }}
-                  >
-                    {sectionItem}{" "}
-                    {(elementsNumber &&
-                      elementsNumber[sectionItem] &&
-                      `( ${elementsNumber[sectionItem]} )`) ??
-                      ""}
-                  </div>
-                );
-              }
-            })}
+            <div
+              className={`selector ${viewToShow === "favorited" && "active"}`}
+              onClick={() => {
+                updateAppState("currentView", "favorited");
+              }}
+            >
+              favorited {`( ${favDogCounter} )`}
+            </div>
+            <div
+              className={`selector ${
+                viewToShow === "notFavorited" && "active"
+              }`}
+              onClick={() => {
+                updateAppState("currentView", "notFavorited");
+              }}
+            >
+              notFavorited {`( ${notFavDogCounter} )`}
+            </div>
+            <div
+              className={`selector ${viewToShow === "create-dog" && "active"}`}
+              onClick={() => {
+                updateAppState("currentView", "create-dog");
+              }}
+            >
+              create-dog
+            </div>
           </div>
         </div>
         <div className="content-container">{this.props.children}</div>

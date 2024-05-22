@@ -1,22 +1,25 @@
 import { Component, FormEvent } from "react";
 import { dogPictures } from "../dog-pictures";
-import { TNewDogData, TNewDogObject } from "../types.ts";
-import { INITIAL_DOG_FORM_STATE } from "../constants.ts";
+import { INITIAL_REQUIRED_DOG_DATA } from "../constants.ts";
 import toast from "react-hot-toast";
+import { TCurrentViewType, TDog } from "../types.ts";
 
 type TClassCreateDogFormProps = {
-  addDog: (dogData: TNewDogData) => Promise<void>;
+  addDog: (dogData: Omit<TDog, "id" | "isFavorite">) => Promise<void>;
+  isLoading: boolean;
+  updateAppState: (
+    prop: "allDogs" | "currentView" | "isLoading",
+    val: TCurrentViewType | TDog[] | boolean,
+  ) => void;
 };
 
-export type TClassCreateDogState = Omit<TNewDogObject, "isFavorite"> & {
-  isFormDisabled: boolean;
-};
+export type TClassCreateDogState = Omit<TDog, "id" | "isFavorite">;
 
 export class ClassCreateDogForm extends Component<
   TClassCreateDogFormProps,
   TClassCreateDogState
 > {
-  state = INITIAL_DOG_FORM_STATE;
+  state = INITIAL_REQUIRED_DOG_DATA;
 
   handleStateUpdate = (name: string, value: string) => {
     this.setState({
@@ -25,16 +28,29 @@ export class ClassCreateDogForm extends Component<
     });
   };
 
+  isFormReadyForSubmission = () => {
+    const { name, image, description } = this.state;
+    return name.length > 0 && description.length > 0 && image.length > 0;
+  };
+
   handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    this.setState({ isFormDisabled: true });
-    this.props.addDog(this.state).then(() => {
-      this.setState(INITIAL_DOG_FORM_STATE);
+    this.props.updateAppState("isLoading", true);
+    const newDogData = {
+      name: this.state.name,
+      image: this.state.image,
+      description: this.state.description,
+      isFavorite: false,
+    };
+    this.props.addDog(newDogData).then(() => {
+      this.setState(INITIAL_REQUIRED_DOG_DATA);
       toast.success("The dog was created!");
     });
   };
 
   render() {
+    const { isLoading } = this.props;
+    console.log(this.isFormReadyForSubmission());
     return (
       <form
         action=""
@@ -50,7 +66,7 @@ export class ClassCreateDogForm extends Component<
           onChange={(e) =>
             this.handleStateUpdate(e.target.name, e.target.value)
           }
-          disabled={this.state.isFormDisabled}
+          disabled={isLoading}
         />
         <label htmlFor="description">Dog Description</label>
         <textarea
@@ -62,7 +78,7 @@ export class ClassCreateDogForm extends Component<
           onChange={(e) =>
             this.handleStateUpdate(e.target.name, e.target.value)
           }
-          disabled={this.state.isFormDisabled}
+          disabled={isLoading}
         />
         <label htmlFor="picture">Select an Image</label>
         <select
@@ -71,7 +87,7 @@ export class ClassCreateDogForm extends Component<
           onChange={(e) =>
             this.handleStateUpdate(e.target.name, e.target.value)
           }
-          disabled={this.state.isFormDisabled}
+          disabled={isLoading}
         >
           {Object.entries(dogPictures).map(([label, pictureValue]) => {
             return (
@@ -84,7 +100,7 @@ export class ClassCreateDogForm extends Component<
         <input
           type="submit"
           value="submit"
-          disabled={this.state.isFormDisabled}
+          disabled={isLoading || !this.isFormReadyForSubmission()}
         />
       </form>
     );

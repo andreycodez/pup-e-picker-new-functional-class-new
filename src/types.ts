@@ -8,30 +8,8 @@ export type TDog = {
   isFavorite: boolean;
 };
 
-export type TDogList = {
-  all: TDog[] | null;
-  favorited: TDog[] | undefined;
-  notFavorited: TDog[] | undefined;
-};
-
-export type TDogListObject = {
-  [key: string]: TDog[] | undefined | null;
-};
-
-export type TDogListNumbers = {
-  [key: keyof TDogListObject]: number;
-};
-
-export type TCurrentViewType = keyof TDogList | "create-dog";
-
-export type TNewDogObject = Omit<TDog, "id">;
-
-export type TNewDogData = Omit<TNewDogObject, "isFavorite">;
-
-export type TDogFormState = TNewDogData & { isFormDisabled: boolean };
-
-export type TPartialDogData = Partial<TNewDogObject>;
-
-export type TActionCallback =
-  | ((id: number) => Promise<void>)
-  | ((id: number, isFavorite: boolean) => Promise<void>);
+export type TCurrentViewType =
+  | "all"
+  | "favorited"
+  | "notFavorited"
+  | "create-dog";
