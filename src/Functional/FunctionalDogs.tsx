@@ -1,46 +1,52 @@
 import { DogCard } from "../Shared/DogCard";
-import { TDog, TDogList, TActionCallback } from "../types";
-import { useState } from "react";
+import { TDog, TCurrentViewType } from "../types";
+import { Dispatch, SetStateAction } from "react";
 
 type FunctionalDogsProps = {
-  dogsList: TDogList[keyof TDogList];
-  deleteAction: TActionCallback;
-  updateDogAction: TActionCallback;
+  currentView: TCurrentViewType;
+  allDogs: TDog[] | null;
+  deleteDogAction: (id: number) => void;
+  updateDogAction: (id: number, isFavorite: boolean) => void;
+  isLoading: boolean;
+  setIsLoading: Dispatch<SetStateAction<boolean>>;
 };
 
 export const FunctionalDogs = ({
-  dogsList,
-  deleteAction,
+  currentView,
+  allDogs,
+  deleteDogAction,
   updateDogAction,
+  isLoading,
+  setIsLoading,
 }: FunctionalDogsProps) => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const favoritedDogs = allDogs?.filter((dog) => dog.isFavorite);
+  const notFavoritedDogs = allDogs?.filter((dog) => !dog.isFavorite);
 
-  const handleAction = (
-    cb: TActionCallback,
-    id: number,
-    isFavorite?: boolean,
-  ) => {
-    setIsLoading(true);
-    cb(id, !!isFavorite).then(() => {
-      setIsLoading(false);
-    });
-  };
+  let currentDogsList;
+
+  if (currentView === "favorited") currentDogsList = favoritedDogs;
+  else if (currentView === "notFavorited") currentDogsList = notFavoritedDogs;
+  else if (currentView === "all") currentDogsList = allDogs;
+  else currentDogsList = [];
 
   return (
     <>
-      {dogsList?.map((dog: TDog) => {
+      {currentDogsList?.map((dog: TDog) => {
         return (
           <DogCard
             dog={dog}
             key={dog.id}
             onTrashIconClick={() => {
-              handleAction(deleteAction, dog.id);
+              setIsLoading(true);
+              deleteDogAction(dog.id);
             }}
             onHeartClick={() => {
-              handleAction(updateDogAction, dog.id, false);
+              setIsLoading(true);
+              updateDogAction(dog.id, false);
             }}
             onEmptyHeartClick={() => {
-              handleAction(updateDogAction, dog.id, true);
+              setIsLoading(true);
+              updateDogAction(dog.id, true);
             }}
             isLoading={isLoading}
           />

@@ -1,55 +1,59 @@
-import { DogCard } from '../Shared/DogCard';
-import { Component } from 'react';
-import { TDogList, TDog } from '../types.ts';
+import { DogCard } from "../Shared/DogCard";
+import { Component } from "react";
+import { TDog, TCurrentViewType } from "../types.ts";
 
 type TClassDogProps = {
-  dogsList: TDogList[keyof TDogList];
-  actions: {
-    doUpdate: (id: number, isFavorite: boolean) => Promise<void>;
-    doDelete: (id: number) => Promise<void>;
-  };
+  allDogs: TDog[] | null;
+  currentView: TCurrentViewType;
+  updateAction: (id: number, isFavorite: boolean) => Promise<void>;
+  deleteAction: (id: number) => Promise<void>;
+  isLoading: boolean;
+  updateAppState: (
+    prop: "allDogs" | "currentView" | "isLoading",
+    val: TCurrentViewType | TDog[] | boolean,
+  ) => void;
 };
 
-// Right now these dogs are constant, but in reality we should be getting these from our server
 export class ClassDogs extends Component<TClassDogProps> {
-  state = {
-    isLoading: false,
-  };
-
-  handleAction = (
-    cb:
-      | ((id: number) => Promise<void>)
-      | ((id: number, isFavorite: boolean) => Promise<void>),
-    id: number,
-    isFavorite?: boolean
-  ) => {
-    this.setState({ isLoading: true });
-    cb(id, !!isFavorite).then(() => {
-      this.setState({ isLoading: false });
-    });
-  };
-
   render() {
     const {
-      dogsList,
-      actions: { doUpdate, doDelete },
+      allDogs,
+      currentView,
+      updateAction,
+      deleteAction,
+      isLoading,
+      updateAppState,
     } = this.props;
+
+    const favoritedDogs = allDogs?.filter((dog) => dog.isFavorite);
+    const notFavoritedDogs = allDogs?.filter((dog) => !dog.isFavorite);
+
+    let currentDogsList;
+
+    if (currentView === "favorited") currentDogsList = favoritedDogs;
+    else if (currentView === "notFavorited") currentDogsList = notFavoritedDogs;
+    else if (currentView === "all") currentDogsList = allDogs;
+    else currentDogsList = [];
+
     return (
       <>
-        {dogsList?.map((dog: TDog) => (
+        {currentDogsList?.map((dog: TDog) => (
           <DogCard
             dog={dog}
             key={dog.id}
             onTrashIconClick={() => {
-              this.handleAction(doDelete, dog.id);
+              updateAppState("isLoading", true);
+              deleteAction(dog.id);
             }}
             onHeartClick={() => {
-              this.handleAction(doUpdate, dog.id, false);
+              updateAppState("isLoading", true);
+              updateAction(dog.id, false);
             }}
             onEmptyHeartClick={() => {
-              this.handleAction(doUpdate, dog.id, true);
+              updateAppState("isLoading", true);
+              updateAction(dog.id, true);
             }}
-            isLoading={this.state.isLoading}
+            isLoading={isLoading}
           />
         ))}
       </>

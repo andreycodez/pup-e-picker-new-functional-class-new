@@ -2,19 +2,13 @@ import { Component } from "react";
 import { ClassSection } from "./ClassSection";
 import { ClassDogs } from "./ClassDogs";
 import { ClassCreateDogForm } from "./ClassCreateDogForm";
-import {
-  TDog,
-  TCurrentViewType,
-  TNewDogObject,
-  TDogList,
-  TNewDogData,
-} from "../types.ts";
+import { TDog, TCurrentViewType } from "../types.ts";
 import { Requests } from "../api.tsx";
-import { getDogsListNumbers } from "../utils.ts";
 
 export type TClassAppStateObject = {
   allDogs: TDog[] | null;
   currentView: TCurrentViewType;
+  isLoading: boolean;
 };
 
 export class ClassApp extends Component<
@@ -24,23 +18,27 @@ export class ClassApp extends Component<
   state: TClassAppStateObject = {
     allDogs: null,
     currentView: "all",
+    isLoading: false,
   };
 
-  fetchDogs = () => {
+  fetchDogs = async () => {
     return Requests.getAllDogs()
-      .then((data) => this.stateUpdateHandler("allDogs", data))
+      .then((data) => {
+        return data;
+      })
       .catch((err) => {
         console.log(err);
-      });
+      })
+      .finally(() => this.stateUpdateHandler("isLoading", false));
   };
 
   componentDidMount() {
-    this.fetchDogs();
+    this.fetchDogs().then((data) => this.setState({ allDogs: data }));
   }
 
   stateUpdateHandler = (
-    key: keyof typeof this.state,
-    value: TCurrentViewType | TDog[] | null,
+    key: "allDogs" | "currentView" | "isLoading",
+    value: TCurrentViewType | TDog[] | boolean | null,
   ) => {
     this.setState({
       ...this.state,
@@ -51,31 +49,34 @@ export class ClassApp extends Component<
     });
   };
 
-  addDog = (dogData: TNewDogData) => {
-    const dataToAdd: TNewDogObject = {
+  addDog = (dogData: Omit<TDog, "id" | "isFavorite">) => {
+    const dataToAdd = {
       ...dogData,
       isFavorite: false,
     };
-    return Requests.postDog(dataToAdd).then(() => this.fetchDogs());
+    return Requests.postDog(dataToAdd).then(() =>
+      this.fetchDogs().then((data) => this.setState({ allDogs: data })),
+    );
   };
 
   updateFavoritedDogValue = (id: number, isFavorite: boolean) => {
-    return Requests.updateDog(id, { isFavorite }).then(() => this.fetchDogs());
+    return Requests.updateDog(id, { isFavorite }).then(() =>
+      this.fetchDogs().then((data) => this.setState({ allDogs: data })),
+    );
   };
 
   deleteDog = (id: number) => {
-    return Requests.deleteDog(id).then(() => this.fetchDogs());
+    return Requests.deleteDog(id).then(() =>
+      this.fetchDogs().then((data) => this.setState({ allDogs: data })),
+    );
   };
 
   render() {
-    const { allDogs, currentView } = this.state;
-    const favorited = allDogs?.filter((dog) => dog.isFavorite);
-    const notFavorited = allDogs?.filter((dog) => !dog.isFavorite);
-
-    const dogsList: TDogList = {
-      all: allDogs,
-      favorited: favorited,
-      notFavorited: notFavorited,
+    const { allDogs, currentView, isLoading } = this.state;
+    const dogCounters = {
+      all: allDogs?.length || 0,
+      favorited: allDogs?.filter((dog) => dog.isFavorite).length || 0,
+      notFavorited: allDogs?.filter((dog) => !dog.isFavorite).length || 0,
     };
 
     return (
@@ -85,20 +86,25 @@ export class ClassApp extends Component<
         </header>
         <ClassSection
           viewToShow={currentView}
-          elementsNumber={getDogsListNumbers(dogsList)}
-          setCurrentView={this.stateUpdateHandler}
+          dogCounters={{ ...dogCounters, "create-dog": null }}
+          updateAppState={this.stateUpdateHandler}
         >
           {currentView !== "create-dog" && (
             <ClassDogs
-              dogsList={dogsList[currentView]}
-              actions={{
-                doUpdate: this.updateFavoritedDogValue,
-                doDelete: this.deleteDog,
-              }}
+              currentView={currentView}
+              allDogs={allDogs}
+              updateAction={this.updateFavoritedDogValue}
+              deleteAction={this.deleteDog}
+              isLoading={isLoading}
+              updateAppState={this.stateUpdateHandler}
             />
           )}
           {currentView === "create-dog" && (
-            <ClassCreateDogForm addDog={this.addDog} />
+            <ClassCreateDogForm
+              addDog={this.addDog}
+              isLoading={isLoading}
+              updateAppState={this.stateUpdateHandler}
+            />
           )}
         </ClassSection>
       </div>

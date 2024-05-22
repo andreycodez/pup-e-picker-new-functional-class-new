@@ -1,25 +1,22 @@
-// you can use this type for react children if you so choose
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { TCurrentViewType, TDogListNumbers } from "../types.ts";
+import { TCurrentViewType } from "../types.ts";
 
 type TFunctionalSectionProps = {
   viewToShow: TCurrentViewType;
-  elementsNumber: TDogListNumbers | null;
+  dogCounters: Record<TCurrentViewType, number | null> | null;
   setCurrentView: (name: TCurrentViewType) => void;
   children: ReactNode;
 };
 
 export const FunctionalSection = ({
   viewToShow,
-  elementsNumber,
+  dogCounters,
   setCurrentView,
   children,
 }: TFunctionalSectionProps) => {
-  const sections = Object.keys({
-    ...elementsNumber,
-    "create-dog": null,
-  }) as TCurrentViewType[];
+  const favDogsCounter = dogCounters?.favorited;
+  const notFavDogsCounter = dogCounters?.notFavorited;
 
   return (
     <section id="main-section">
@@ -29,24 +26,30 @@ export const FunctionalSection = ({
           Change to Class
         </Link>
         <div className="selectors">
-          {sections.map((section) => {
-            if (section !== "all") {
-              return (
-                <div
-                  key={section}
-                  className={`selector ${viewToShow === section && "active"}`}
-                  onClick={() => {
-                    setCurrentView(section);
-                  }}
-                >
-                  {section}{" "}
-                  {elementsNumber && elementsNumber[section] && (
-                    <>{elementsNumber[section]}</>
-                  )}
-                </div>
-              );
-            }
-          })}
+          <div
+            className={`selector ${viewToShow === "favorited" && "active"}`}
+            onClick={() => {
+              setCurrentView("favorited");
+            }}
+          >
+            favorited {` (${favDogsCounter})`}
+          </div>
+          <div
+            className={`selector ${viewToShow === "notFavorited" && "active"}`}
+            onClick={() => {
+              setCurrentView("notFavorited");
+            }}
+          >
+            not favorited {` (${notFavDogsCounter})`}
+          </div>
+          <div
+            className={`selector ${viewToShow === "create-dog" && "active"}`}
+            onClick={() => {
+              setCurrentView("create-dog");
+            }}
+          >
+            create dog
+          </div>
         </div>
       </div>
       <div className="content-container">{children}</div>
